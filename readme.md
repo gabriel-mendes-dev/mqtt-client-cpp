@@ -1,0 +1,1 @@
+This is just a wrapper around paho-mqtt-cpp async client to simplify usage with callbacks and responses for arrived messages. It is based on [async_subscribe example](https://github.com/eclipse/paho.mqtt.cpp/blob/master/src/samples/async_subscribe.cpp).

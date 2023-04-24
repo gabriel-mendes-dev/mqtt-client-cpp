@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.18)
+project(example-mqtt VERSION 0.0.0 LANGUAGES CXX)
+file(GLOB SOURCEFILES "src/*.cpp" "example/*.cpp")
+add_executable(example-mqtt ${SOURCEFILES})
+set_property(TARGET example-mqtt PROPERTY CXX_STANDARD 17)
+set_property(TARGET example-mqtt PROPERTY CXX_STANDARD_REQUIRED ON)
+target_include_directories(example-mqtt PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(example-mqtt paho-mqtt3a paho-mqttpp3)
