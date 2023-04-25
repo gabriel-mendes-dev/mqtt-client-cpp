@@ -100,8 +100,8 @@ void MqttClient::publish(std::string topic, std::string payload){
     _pahoMqttClient.publish(topic, payload);
 }
 
-void MqttClient::on(std::string topic, std::function<std::string(std::string)> messageHandler){
-    _callbacks.on(topic, messageHandler);
+void MqttClient::on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler){
+    _callbacks.on(topicFilter, messageHandler);
 }
 
 void MqttClient::onConnect(std::function<void()> onConnectCallback){

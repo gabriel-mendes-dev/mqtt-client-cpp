@@ -35,6 +35,6 @@ class MqttClient {
         int start();
         int finish();
         void publish(std::string topic, std::string payload);
-        void on(std::string topic, std::function<std::string(std::string)> messageHandler);
+        void on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler);
         void onConnect(std::function<void()> onConnectCallback);
 };

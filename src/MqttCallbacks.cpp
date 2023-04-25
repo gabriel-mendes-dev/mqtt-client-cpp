@@ -22,6 +22,38 @@ std::string MqttCallbacks::getTokenTypeStr(mqtt::token::Type type){
     }
 }
 
+bool MqttCallbacks::isMqttTopicIncluded(const std::string& topic, const std::string& filter) {
+    size_t tlen = topic.length();
+    size_t flen = filter.length();
+    size_t tidx = 0;
+    size_t fidx = 0;
+
+    while (tidx < tlen && fidx < flen) {
+        if (filter[fidx] == '+') {
+            // Single level wildcard, skip to the next level in topic
+            ++fidx;
+            while (tidx < tlen && topic[tidx] != '/')
+                ++tidx;
+        } else if (filter[fidx] == '#') {
+            // Multi level wildcard, match remaining levels in topic
+            if (fidx + 1 == flen) // # is at the end of the filter
+                return true;
+            while (tidx < tlen && topic[tidx] != '/')
+                ++tidx;
+            ++fidx;
+        } else {
+            // Normal character, must match exactly
+            if (topic[tidx] != filter[fidx])
+                return false;
+            ++tidx;
+            ++fidx;
+        }
+    }
+
+    // If both topic and filter have been fully processed, they match
+    return tidx == tlen && fidx == flen;
+}
+
 void MqttCallbacks::reconnect() {
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     try {
@@ -64,12 +96,12 @@ void MqttCallbacks::connection_lost(const std::string& cause){
 }
 
 void MqttCallbacks::message_arrived(mqtt::const_message_ptr msg){
-    std::cout << "Message arrived from server" << std::endl;
+    std::cout << "Message arrived from broker" << std::endl;
     std::cout << "topic: '" << msg->get_topic() << "'" << std::endl;
     std::cout << "payload: '" << msg->to_string() << std::endl;
     for(auto messageHandler : messageHandlers){
-        if(std::get<0>(messageHandler) == msg->get_topic()){
-            std::string response = std::get<1>(messageHandler)(msg->to_string());
+        if(isMqttTopicIncluded(msg->get_topic(), std::get<0>(messageHandler))){
+            std::string response = std::get<1>(messageHandler)(msg->get_topic(), msg->to_string());
             mqtt::properties msgProps = msg->get_properties();
             if(msgProps.contains(mqtt::property::code::RESPONSE_TOPIC)){
                 const mqtt::property& responseTopicProp = msgProps.get(mqtt::property::code::RESPONSE_TOPIC);
@@ -87,14 +119,14 @@ void MqttCallbacks::onConnect(std::function<void()> onConnectCallback){
     _onConnectCallback = onConnectCallback;
 }
 
-void MqttCallbacks::on(std::string topic, std::function<std::string(std::string)> messageHandler){
+void MqttCallbacks::on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler){
     for(auto messageHandler : messageHandlers){
-        if(std::get<0>(messageHandler) == topic){
+        if(std::get<0>(messageHandler) == topicFilter){
             return;
         }
     }
-    messageHandlers.emplace_back(topic, messageHandler);
+    messageHandlers.emplace_back(topicFilter, messageHandler);
     if(_mqttClient.is_connected()){
-        _mqttClient.subscribe(topic, 0, nullptr, *this);
+        _mqttClient.subscribe(topicFilter, 0, nullptr, *this);
     }
 }

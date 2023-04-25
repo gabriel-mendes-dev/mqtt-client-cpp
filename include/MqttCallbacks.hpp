@@ -11,7 +11,7 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
 
         // class user callbacks
         std::function<void()> _onConnectCallback = nullptr;
-        std::vector<std::tuple<std::string, std::function<std::string(std::string)>>> messageHandlers;
+        std::vector<std::tuple<std::string, std::function<std::string(std::string, std::string)>>> messageHandlers;
 
         void reconnect();
 
@@ -37,6 +37,8 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
         // Callback for message delivery complete - not used yet
         void delivery_complete(mqtt::delivery_token_ptr token) override {}
 
+        bool isMqttTopicIncluded(const std::string& topic, const std::string& filter);
+
     public:
         MqttCallbacks(mqtt::async_client& mqttClient, mqtt::connect_options& connOpts);
 
@@ -44,6 +46,6 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
         void onConnect(std::function<void()> onConnectCallback);
 
         // for class user to add callbacks for messages received in specific topics
-        void on(std::string topic, std::function<std::string(std::string)> messageHandler);
+        void on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler);
 
 };
