@@ -71,29 +71,15 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, std::strin
     MqttClient(hostAddress, 1883, clientId, cert, MQTTVERSION_3_1_1);
 } */
 
-int MqttClient::start(){
-    try {
-        std::cout << "Connecting " << _clientId << " to MQTT broker " << _hostAddress << std::endl;
-        _pahoMqttClient.connect(_connectOptions, nullptr, _callbacks);
-    } catch (const mqtt::exception& exc) {
-		std::cerr << "ERROR: Unable to connect to MQTT server: '"
-			<< _hostAddress << "'" << exc << std::endl;
-		return -1;
-    }
-    return 0;
+void MqttClient::start(){
+    std::cout << "Connecting " << _clientId << " to MQTT broker " << _hostAddress << std::endl;
+    _pahoMqttClient.connect(_connectOptions, nullptr, _callbacks);
 }
 
-int MqttClient::finish(){
-    try {
-        std::cout << "Disconnecting " << _clientId << " from MQTT broker " << _hostAddress << std::endl;
-        _pahoMqttClient.disconnect()->wait();
-        std::cout << _clientId << " finished disconnecting." << std::endl;
-	}
-	catch (const mqtt::exception& exc) {
-		std::cerr << exc << std::endl;
-		return -1;
-	}
-    return 0;
+void MqttClient::finish(){
+    std::cout << "Disconnecting " << _clientId << " from MQTT broker " << _hostAddress << std::endl;
+    _pahoMqttClient.disconnect();
+    std::cout << _clientId << " finished disconnecting." << std::endl;
 }
 
 void MqttClient::publish(std::string topic, std::string payload){

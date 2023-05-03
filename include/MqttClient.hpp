@@ -32,8 +32,8 @@ class MqttClient {
         MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion);
         MqttClient(std::string hostAddress, std::string clientId, std::string cert, int mqttVersion);
         MqttClient(std::string hostAddress, int port, std::string clientId, std::string cert, int mqttVersion);
-        int start();
-        int finish();
+        void start();
+        void finish();
         void publish(std::string topic, std::string payload);
         void on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler);
         void onConnect(std::function<void()> onConnectCallback);
