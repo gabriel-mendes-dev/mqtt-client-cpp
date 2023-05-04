@@ -10,28 +10,36 @@
 #include "MqttCallbacks.hpp"
 
 class MqttClient {
+    public:
+        struct sslSettings {
+            std::string caCertPath;
+            std::string clientCertPath;
+            std::string clientKeyPath;
+            std::string clientKeyPassword;
+        };
+
     private:
         std::string _hostAddress;
         int _hostPort;
         std::string _clientId;
-        // TODO add TLS support
-        bool _secure;
-        std::string _cert;
+        sslSettings _sslSettings;
 
         mqtt::create_options _createOptions;
         mqtt::async_client _pahoMqttClient;
         mqtt::connect_options _connectOptions;
+        mqtt::ssl_options _sslOptions;
         MqttCallbacks _callbacks;
+
 
     public:
         MqttClient(std::string hostAddress, std::string clientId);
         MqttClient(std::string hostAddress, int port, std::string clientId);
-        MqttClient(std::string hostAddress, std::string clientId, std::string cert);
-        MqttClient(std::string hostAddress, int port, std::string clientId, std::string cert);
         MqttClient(std::string hostAddress, std::string clientId, int mqttVersion);
         MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion);
-        MqttClient(std::string hostAddress, std::string clientId, std::string cert, int mqttVersion);
-        MqttClient(std::string hostAddress, int port, std::string clientId, std::string cert, int mqttVersion);
+        MqttClient(std::string hostAddress, std::string clientId, sslSettings sslParams);
+        MqttClient(std::string hostAddress, int port, std::string clientId, sslSettings sslParams);
+        MqttClient(std::string hostAddress, std::string clientId, int mqttVersion, sslSettings sslParams);
+        MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, sslSettings sslParams);
         void start();
         void finish();
         void publish(std::string topic, std::string payload);

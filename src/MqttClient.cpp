@@ -48,28 +48,81 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVe
     _pahoMqttClient.set_callback(_callbacks);
 }
 
-/* MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, std::string cert, int mqttVersion){
+MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, sslSettings sslParams):
+    _createOptions(mqttVersion),
+    _pahoMqttClient(hostAddress + ":" + std::to_string(port), clientId, _createOptions, nullptr),
+    _callbacks(_pahoMqttClient, _connectOptions)
+{
     _hostPort = port;
     _hostAddress = hostAddress;
     _clientId = clientId;
-    _secure = true;
-    _cert = cert;
+    _sslSettings = sslParams;
+    _sslOptions.set_trust_store(_sslSettings.caCertPath);
+    _sslOptions.set_key_store(_sslSettings.clientCertPath);
+    _sslOptions.set_private_key(_sslSettings.clientKeyPath);
+    _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
+    _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
-    _pahoMqttClient.set_callback(*_callbacks);
+    _connectOptions.set_ssl(_sslOptions);
+    _pahoMqttClient.set_callback(_callbacks);
 }
 
-MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, std::string cert){
-    MqttClient(hostAddress, port, _clientId, cert, MQTTVERSION_3_1_1);
+MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, sslSettings sslParams):
+    _pahoMqttClient(hostAddress + ":" + std::to_string(port), clientId, _createOptions, nullptr),
+    _callbacks(_pahoMqttClient, _connectOptions)
+{
+    _hostPort = port;
+    _hostAddress = hostAddress;
+    _clientId = clientId;
+    _sslSettings = sslParams;
+    _sslOptions.set_trust_store(_sslSettings.caCertPath);
+    _sslOptions.set_key_store(_sslSettings.clientCertPath);
+    _sslOptions.set_private_key(_sslSettings.clientKeyPath);
+    _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
+    _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
+    _connectOptions.set_clean_start(false);
+    _connectOptions.set_ssl(_sslOptions);
+    _pahoMqttClient.set_callback(_callbacks);
 }
 
-MqttClient::MqttClient(std::string hostAddress, std::string clientId, std::string cert){
-    MqttClient(hostAddress, 1883, clientId, cert);
+MqttClient::MqttClient(std::string hostAddress, std::string clientId, sslSettings sslParams):
+    _pahoMqttClient(hostAddress, clientId, _createOptions, nullptr),
+    _callbacks(_pahoMqttClient, _connectOptions)
+{
+    _hostPort = 8883;
+    _hostAddress = hostAddress;
+    _clientId = clientId;
+    _sslSettings = sslParams;
+    _sslOptions.set_trust_store(_sslSettings.caCertPath);
+    _sslOptions.set_key_store(_sslSettings.clientCertPath);
+    _sslOptions.set_private_key(_sslSettings.clientKeyPath);
+    _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
+    _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
+    _connectOptions.set_clean_start(false);
+    _connectOptions.set_ssl(_sslOptions);
+    _pahoMqttClient.set_callback(_callbacks);
 }
 
-MqttClient::MqttClient(std::string hostAddress, std::string clientId, std::string cert, int mqttVersion){
-    MqttClient(hostAddress, 1883, clientId, cert, MQTTVERSION_3_1_1);
-} */
+MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVersion, sslSettings sslParams):
+    _createOptions(mqttVersion),
+    _pahoMqttClient(hostAddress, clientId, _createOptions, nullptr),
+    _callbacks(_pahoMqttClient, _connectOptions)
+{
+    _hostPort = 8883;
+    _hostAddress = hostAddress;
+    _clientId = clientId;
+    _sslSettings = sslParams;
+    _sslOptions.set_trust_store(_sslSettings.caCertPath);
+    _sslOptions.set_key_store(_sslSettings.clientCertPath);
+    _sslOptions.set_private_key(_sslSettings.clientKeyPath);
+    _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
+    _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
+    _connectOptions.set_mqtt_version(mqttVersion);
+    _connectOptions.set_clean_start(false);
+    _connectOptions.set_ssl(_sslOptions);
+    _pahoMqttClient.set_callback(_callbacks);
+}
 
 void MqttClient::start(){
     std::cout << "Connecting " << _clientId << " to MQTT broker " << _hostAddress << std::endl;
