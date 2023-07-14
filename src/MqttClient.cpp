@@ -135,8 +135,8 @@ void MqttClient::finish(){
     std::cout << _clientId << " finished disconnecting." << std::endl;
 }
 
-void MqttClient::publish(std::string topic, std::string payload){
-    _pahoMqttClient.publish(topic, payload);
+void MqttClient::publish(std::string topic, std::string payload, int qos, bool retain){
+    _pahoMqttClient.publish(topic, payload, qos, retain);
 }
 
 void MqttClient::on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler){
