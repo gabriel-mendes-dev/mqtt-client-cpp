@@ -125,14 +125,14 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVe
 }
 
 void MqttClient::start(){
-    std::cout << "Connecting " << _clientId << " to MQTT broker " << _hostAddress << std::endl;
+    //std::cout << "Connecting " << _clientId << " to MQTT broker " << _hostAddress << std::endl;
     _pahoMqttClient.connect(_connectOptions, nullptr, _callbacks);
 }
 
 void MqttClient::finish(){
-    std::cout << "Disconnecting " << _clientId << " from MQTT broker " << _hostAddress << std::endl;
+    //std::cout << "Disconnecting " << _clientId << " from MQTT broker " << _hostAddress << std::endl;
     _pahoMqttClient.disconnect();
-    std::cout << _clientId << " finished disconnecting." << std::endl;
+    //std::cout << _clientId << " finished disconnecting." << std::endl;
 }
 
 void MqttClient::publish(std::string topic, std::string payload, int qos, bool retain){

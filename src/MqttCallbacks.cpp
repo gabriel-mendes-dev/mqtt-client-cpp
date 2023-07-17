@@ -66,18 +66,18 @@ void MqttCallbacks::reconnect() {
 }
 
 void MqttCallbacks::on_failure(const mqtt::token& tok) {
-    std::cout << "Action failed for MQTT client " << _mqttClient.get_client_id() << ": " << getTokenTypeStr(tok.get_type()) << std::endl;
+    //std::cout << "Action failed for MQTT client " << _mqttClient.get_client_id() << ": " << getTokenTypeStr(tok.get_type()) << std::endl;
     if(tok.get_type() == mqtt::token::CONNECT){
         reconnect();
     }
 }
 
 void MqttCallbacks::on_success(const mqtt::token& tok) {
-    std::cout << "Action succeeded for MQTT client " << _mqttClient.get_client_id() << ": " << getTokenTypeStr(tok.get_type()) << std::endl;
+    //std::cout << "Action succeeded for MQTT client " << _mqttClient.get_client_id() << ": " << getTokenTypeStr(tok.get_type()) << std::endl;
 }
 
 void MqttCallbacks::connected(const std::string& cause) {
-    std::cout << "Connection success for MQTT client " << _mqttClient.get_client_id() << std::endl;
+    //std::cout << "Connection success for MQTT client " << _mqttClient.get_client_id() << std::endl;
     for(auto messageHandler : messageHandlers){
         _mqttClient.subscribe(std::get<0>(messageHandler), 0, nullptr, *this);
     }
@@ -87,18 +87,18 @@ void MqttCallbacks::connected(const std::string& cause) {
 }
 
 void MqttCallbacks::connection_lost(const std::string& cause){
-    std::cout << "Connection lost for MQTT client" << this->_mqttClient.get_client_id() << std::endl;
+    //std::cout << "Connection lost for MQTT client" << this->_mqttClient.get_client_id() << std::endl;
     if (!cause.empty()){
-        std::cout << "Cause: " << cause << std::endl;
+        //std::cout << "Cause: " << cause << std::endl;
     }
-    std::cout << "Reconnecting..." << std::endl;
+    //std::cout << "Reconnecting..." << std::endl;
     reconnect();
 }
 
 void MqttCallbacks::message_arrived(mqtt::const_message_ptr msg){
-    std::cout << "Message arrived from broker" << std::endl;
-    std::cout << "topic: '" << msg->get_topic() << "'" << std::endl;
-    std::cout << "payload: '" << msg->to_string() << std::endl;
+    //std::cout << "Message arrived from broker" << std::endl;
+    //std::cout << "topic: '" << msg->get_topic() << "'" << std::endl;
+    //std::cout << "payload: '" << msg->to_string() << std::endl;
     for(auto messageHandler : messageHandlers){
         if(isMqttTopicIncluded(msg->get_topic(), std::get<0>(messageHandler))){
             std::string response = std::get<1>(messageHandler)(msg->get_topic(), msg->to_string());
