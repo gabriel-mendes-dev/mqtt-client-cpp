@@ -10,6 +10,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _clientId = clientId;
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
 
@@ -21,6 +22,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId):
     _hostAddress = hostAddress;
     _clientId = clientId;
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
 
@@ -32,6 +34,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId):
     _hostAddress = hostAddress;
     _clientId = clientId;
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
 
@@ -45,6 +48,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVe
     _clientId = clientId;
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
 
@@ -64,6 +68,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
 }
@@ -82,6 +87,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
 }
@@ -100,6 +106,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, sslSetting
     _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
 }
@@ -120,6 +127,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVe
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
 }

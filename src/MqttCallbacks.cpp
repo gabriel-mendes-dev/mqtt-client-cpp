@@ -57,9 +57,8 @@ bool MqttCallbacks::isMqttTopicIncluded(const std::string& topic, const std::str
 void MqttCallbacks::reconnect() {
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     try {
-        _mqttClient.connect(_connOpts, nullptr, *this);
-    }
-    catch (const mqtt::exception& exc) {
+        _mqttClient.reconnect();
+    } catch (const mqtt::exception& exc) {
         std::cerr << "Error: " << exc.what() << std::endl;
         //exit(1);
     }
