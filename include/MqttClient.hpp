@@ -24,11 +24,11 @@ class MqttClient {
         std::string _clientId;
         sslSettings _sslSettings;
 
-        mqtt::create_options _createOptions;
-        mqtt::async_client _pahoMqttClient;
-        mqtt::connect_options _connectOptions;
-        mqtt::ssl_options _sslOptions;
-        MqttCallbacks _callbacks;
+        std::unique_ptr<mqtt::create_options> _createOptionsPtr;
+        std::unique_ptr<mqtt::async_client> _pahoMqttClientPtr;
+        std::unique_ptr<mqtt::connect_options> _connectOptionsPtr;
+        std::unique_ptr<mqtt::ssl_options> _sslOptionsPtr;
+        std::unique_ptr<MqttCallbacks> _callbacksPtr;
 
 
     public:
