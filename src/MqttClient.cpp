@@ -10,6 +10,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _clientId = clientId;
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
@@ -22,6 +23,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId):
     _hostAddress = hostAddress;
     _clientId = clientId;
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
@@ -34,6 +36,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId):
     _hostAddress = hostAddress;
     _clientId = clientId;
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
@@ -48,6 +51,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVe
     _clientId = clientId;
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _pahoMqttClient.set_callback(_callbacks);
 }
@@ -66,8 +70,13 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _sslOptions.set_private_key(_sslSettings.clientKeyPath);
     _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
+    // std::cout << "SSL Password: " << _sslSettings.clientKeyPassword << std::endl;
+    _sslOptions.set_error_handler([](const std::string& msg) {
+        std::cerr << "SSL Error: " << msg << std::endl;
+    });
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
@@ -87,6 +96,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
@@ -106,6 +116,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, sslSetting
     _sslOptions.set_private_key_password(_sslSettings.clientKeyPassword);
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
@@ -127,6 +138,7 @@ MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVe
     _sslOptions.set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
     _connectOptions.set_mqtt_version(mqttVersion);
     _connectOptions.set_clean_start(false);
+    _connectOptions.set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptions.set_automatic_reconnect(true);
     _connectOptions.set_ssl(_sslOptions);
     _pahoMqttClient.set_callback(_callbacks);
@@ -143,8 +155,10 @@ void MqttClient::finish(){
     //std::cout << _clientId << " finished disconnecting." << std::endl;
 }
 
-void MqttClient::publish(std::string topic, std::string payload, int qos, bool retain){
-    _pahoMqttClient.publish(topic, payload, qos, retain);
+int MqttClient::publish(std::string topic, std::string payload, int qos, bool retain){
+    mqtt::message_ptr msg = mqtt::make_message(topic, payload, qos, retain);
+    mqtt::delivery_token_ptr tok = _pahoMqttClient.publish(msg, nullptr, _callbacks);
+    return tok->get_message_id();
 }
 
 void MqttClient::on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler){
@@ -157,4 +171,12 @@ void MqttClient::onConnect(std::function<void()> onConnectCallback){
 
 void MqttClient::onDisconnect(std::function<void()> onDisconnectCallback){
     _callbacks.onDisconnect(onDisconnectCallback);
+}
+
+void MqttClient::onPublishResult(std::function<void(MqttCallbacks::PublishResult result, int messageId)> onPublishResultCallback){
+    _callbacks.onPublishResult(onPublishResultCallback);
+}
+
+bool MqttClient::isConnected(){
+    return _pahoMqttClient.is_connected();
 }

@@ -60,19 +60,31 @@ void MqttCallbacks::reconnect() {
         _mqttClient.reconnect();
     } catch (const mqtt::exception& exc) {
         std::cerr << "Error: " << exc.what() << std::endl;
-        //exit(1);
     }
 }
 
 void MqttCallbacks::on_failure(const mqtt::token& tok) {
     //std::cout << "Action failed for MQTT client " << _mqttClient.get_client_id() << ": " << getTokenTypeStr(tok.get_type()) << std::endl;
-    if(tok.get_type() == mqtt::token::CONNECT){
-        reconnect();
-    }
 }
 
 void MqttCallbacks::on_success(const mqtt::token& tok) {
     //std::cout << "Action succeeded for MQTT client " << _mqttClient.get_client_id() << ": " << getTokenTypeStr(tok.get_type()) << std::endl;
+}
+
+void MqttCallbacks::delivery_complete(mqtt::delivery_token_ptr tok) {
+    PublishResult result;
+    if(tok->get_return_code() == MQTTASYNC_SUCCESS){
+         /* std::cout << "Message delivery complete for MQTT client " << _mqttClient.get_client_id() << ": " << std::to_string(tok->get_message_id()) 
+            << std::endl;  */
+        result = PUBLISH_SUCCESS;
+    } else {
+        /* std::cout << "Message delivery failed for MQTT client " << _mqttClient.get_client_id() << ": " << std::to_string(tok->get_message_id()) 
+            << "Return code: "<< tok->get_return_code() << std::endl; */
+        result = PUBLISH_FAILURE;
+    }
+    if(_onPublishResultCallback){
+        _onPublishResultCallback(result, tok->get_message_id());
+    }
 }
 
 void MqttCallbacks::connected(const std::string& cause) {
@@ -121,6 +133,10 @@ void MqttCallbacks::onConnect(std::function<void()> onConnectCallback){
 
 void MqttCallbacks::onDisconnect(std::function<void()> onDisconnectCallback){
     _onDisconnectCallback = onDisconnectCallback;
+}
+
+void MqttCallbacks::onPublishResult(std::function<void(PublishResult result, int messageId)> onPublishResultCallback){
+    _onPublishResultCallback = onPublishResultCallback;
 }
 
 void MqttCallbacks::on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler){

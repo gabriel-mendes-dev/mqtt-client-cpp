@@ -4,6 +4,12 @@
 
 class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction_listener
 {
+    public:
+        enum PublishResult {
+            PUBLISH_SUCCESS = 0,
+            PUBLISH_FAILURE = 1
+        };
+
     private:
         // for reconnection, subscription, etc
         mqtt::async_client& _mqttClient; 
@@ -12,6 +18,7 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
         // class user callbacks
         std::function<void()> _onConnectCallback = nullptr;
         std::function<void()> _onDisconnectCallback = nullptr;
+        std::function<void(PublishResult result, int messageId)> _onPublishResultCallback = nullptr;
         std::vector<std::tuple<std::string, std::function<std::string(std::string, std::string)>>> messageHandlers;
 
         void reconnect();
@@ -36,7 +43,7 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
         void on_success(const mqtt::token& tok) override;
 
         // Callback for message delivery complete - not used yet
-        void delivery_complete(mqtt::delivery_token_ptr token) override {}
+        void delivery_complete(mqtt::delivery_token_ptr tok) override;
 
         bool isMqttTopicIncluded(const std::string& topic, const std::string& filter);
 
@@ -48,6 +55,8 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
 
         // for class user to add callback for when client is disconnected
         void onDisconnect(std::function<void()> onDisconnectCallback);
+
+        void onPublishResult(std::function<void(PublishResult result, int messageId)> onPublishResultCallback);
 
         // for class user to add callbacks for messages received in specific topics
         void on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler);
