@@ -91,8 +91,9 @@ void MqttCallbacks::connection_lost(const std::string& cause){
     if (!cause.empty()){
         //std::cout << "Cause: " << cause << std::endl;
     }
-    //std::cout << "Reconnecting..." << std::endl;
-    reconnect();
+    if(_onDisconnectCallback){
+        _onDisconnectCallback();
+    }
 }
 
 void MqttCallbacks::message_arrived(mqtt::const_message_ptr msg){
@@ -117,6 +118,10 @@ MqttCallbacks::MqttCallbacks(mqtt::async_client& mqttClient, mqtt::connect_optio
 
 void MqttCallbacks::onConnect(std::function<void()> onConnectCallback){
     _onConnectCallback = onConnectCallback;
+}
+
+void MqttCallbacks::onDisconnect(std::function<void()> onDisconnectCallback){
+    _onDisconnectCallback = onDisconnectCallback;
 }
 
 void MqttCallbacks::on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler){

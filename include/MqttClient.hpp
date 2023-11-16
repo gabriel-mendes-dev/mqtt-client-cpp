@@ -45,4 +45,5 @@ class MqttClient {
         void publish(std::string topic, std::string payload, int qos, bool retain);
         void on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler);
         void onConnect(std::function<void()> onConnectCallback);
+        void onDisconnect(std::function<void()> onDisconnectCallback);
 };

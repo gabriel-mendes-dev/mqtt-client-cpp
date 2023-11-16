@@ -146,3 +146,7 @@ void MqttClient::on(std::string topicFilter, std::function<std::string(std::stri
 void MqttClient::onConnect(std::function<void()> onConnectCallback){
     _callbacks.onConnect(onConnectCallback);
 }
+
+void MqttClient::onDisconnect(std::function<void()> onDisconnectCallback){
+    _callbacks.onDisconnect(onDisconnectCallback);
+}

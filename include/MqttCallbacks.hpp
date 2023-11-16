@@ -11,6 +11,7 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
 
         // class user callbacks
         std::function<void()> _onConnectCallback = nullptr;
+        std::function<void()> _onDisconnectCallback = nullptr;
         std::vector<std::tuple<std::string, std::function<std::string(std::string, std::string)>>> messageHandlers;
 
         void reconnect();
@@ -44,6 +45,9 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
 
         // for class user to add callback for when client is connected
         void onConnect(std::function<void()> onConnectCallback);
+
+        // for class user to add callback for when client is disconnected
+        void onDisconnect(std::function<void()> onDisconnectCallback);
 
         // for class user to add callbacks for messages received in specific topics
         void on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler);
