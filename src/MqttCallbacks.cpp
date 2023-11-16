@@ -83,7 +83,7 @@ void MqttCallbacks::delivery_complete(mqtt::delivery_token_ptr tok) {
         result = PUBLISH_FAILURE;
     }
     if(_onPublishResultCallback){
-        _onPublishResultCallback(result, tok->get_message_id());
+        _onPublishResultCallback(result, tok->get_message_id(), tok->get_message());
     }
 }
 
@@ -135,7 +135,7 @@ void MqttCallbacks::onDisconnect(std::function<void()> onDisconnectCallback){
     _onDisconnectCallback = onDisconnectCallback;
 }
 
-void MqttCallbacks::onPublishResult(std::function<void(PublishResult result, int messageId)> onPublishResultCallback){
+void MqttCallbacks::onPublishResult(std::function<void(PublishResult result, int messageId,  mqtt::const_message_ptr msg)> onPublishResultCallback){
     _onPublishResultCallback = onPublishResultCallback;
 }
 

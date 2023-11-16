@@ -94,7 +94,7 @@ void MqttClient::onDisconnect(std::function<void()> onDisconnectCallback){
     _callbacksPtr->onDisconnect(onDisconnectCallback);
 }
 
-void MqttClient::onPublishResult(std::function<void(MqttCallbacks::PublishResult result, int messageId)> onPublishResultCallback){
+void MqttClient::onPublishResult(std::function<void(MqttCallbacks::PublishResult result, int messageId, mqtt::const_message_ptr msg)> onPublishResultCallback){
     _callbacksPtr->onPublishResult(onPublishResultCallback);
 }
 
