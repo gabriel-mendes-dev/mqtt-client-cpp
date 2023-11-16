@@ -5,7 +5,6 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _createOptionsPtr = std::make_unique<mqtt::create_options>(mqttVersion);
     _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, *_createOptionsPtr, nullptr),
     _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
     _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
     _hostPort = port;
     _hostAddress = hostAddress;
@@ -17,63 +16,11 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _pahoMqttClientPtr->set_callback(*_callbacksPtr);
 }
 
-MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId)
-{
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, nullptr),
-    _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
-    _hostPort = port;
-    _hostAddress = hostAddress;
-    _clientId = clientId;
-    _connectOptionsPtr->set_clean_start(false);
-    _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
-    _connectOptionsPtr->set_automatic_reconnect(true);
-    _pahoMqttClientPtr->set_callback(*_callbacksPtr);
-}
-
-MqttClient::MqttClient(std::string hostAddress, std::string clientId)
-{
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress, clientId, nullptr),
-    _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
-    _hostPort = 1883;
-    _hostAddress = hostAddress;
-    _clientId = clientId;
-    _connectOptionsPtr->set_clean_start(false);
-    _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
-    _connectOptionsPtr->set_automatic_reconnect(true);
-    _pahoMqttClientPtr->set_callback(*_callbacksPtr);
-}
-
-MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVersion)
-{
-    _createOptionsPtr = std::make_unique<mqtt::create_options>(mqttVersion);
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress, clientId, *_createOptionsPtr, nullptr),
-    _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
-    _hostPort = 1883;
-    _hostAddress = hostAddress;
-    _clientId = clientId;
-    _connectOptionsPtr->set_mqtt_version(mqttVersion);
-    _connectOptionsPtr->set_clean_start(false);
-    _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
-    _connectOptionsPtr->set_automatic_reconnect(true);
-    _pahoMqttClientPtr->set_callback(*_callbacksPtr);
-}
 
 MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, sslSettings sslParams)
+    : MqttClient(hostAddress, port, clientId, mqttVersion)
 {
-    _createOptionsPtr = std::make_unique<mqtt::create_options>(mqttVersion);
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, *_createOptionsPtr, nullptr),
-    _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
     _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
-    _hostPort = port;
-    _hostAddress = hostAddress;
-    _clientId = clientId;
     _sslSettings = sslParams;
     _sslOptionsPtr->set_trust_store(_sslSettings.caCertPath);
     _sslOptionsPtr->set_key_store(_sslSettings.clientCertPath);
@@ -84,80 +31,31 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _sslOptionsPtr->set_error_handler([](const std::string& msg) {
         std::cerr << "SSL Error: " << msg << std::endl;
     });
-    _connectOptionsPtr->set_mqtt_version(mqttVersion);
-    _connectOptionsPtr->set_clean_start(false);
-    _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
-    _connectOptionsPtr->set_automatic_reconnect(true);
     _connectOptionsPtr->set_ssl(*_sslOptionsPtr);
-    _pahoMqttClientPtr->set_callback(*_callbacksPtr);
+}
+
+MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId) 
+    : MqttClient(hostAddress, port, clientId, MQTTVERSION_3_1_1){
+}
+
+MqttClient::MqttClient(std::string hostAddress, std::string clientId)
+    : MqttClient(hostAddress, 1883, clientId, MQTTVERSION_3_1_1){
+}
+
+MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVersion)
+    : MqttClient(hostAddress, 1883, clientId, mqttVersion){
 }
 
 MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, sslSettings sslParams)
-{
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, *_createOptionsPtr, nullptr),
-    _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
-    _hostPort = port;
-    _hostAddress = hostAddress;
-    _clientId = clientId;
-    _sslSettings = sslParams;
-    _sslOptionsPtr->set_trust_store(_sslSettings.caCertPath);
-    _sslOptionsPtr->set_key_store(_sslSettings.clientCertPath);
-    _sslOptionsPtr->set_private_key(_sslSettings.clientKeyPath);
-    _sslOptionsPtr->set_private_key_password(_sslSettings.clientKeyPassword);
-    _sslOptionsPtr->set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
-    _connectOptionsPtr->set_clean_start(false);
-    _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
-    _connectOptionsPtr->set_automatic_reconnect(true);
-    _connectOptionsPtr->set_ssl(*_sslOptionsPtr);
-    _pahoMqttClientPtr->set_callback(*_callbacksPtr);
+    :MqttClient(hostAddress, port, clientId, MQTTVERSION_3_1_1, sslParams){
 }
 
 MqttClient::MqttClient(std::string hostAddress, std::string clientId, sslSettings sslParams)
-{
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress, clientId, *_createOptionsPtr, nullptr),
-    _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
-    _hostPort = 8883;
-    _hostAddress = hostAddress;
-    _clientId = clientId;
-    _sslSettings = sslParams;
-    _sslOptionsPtr->set_trust_store(_sslSettings.caCertPath);
-    _sslOptionsPtr->set_key_store(_sslSettings.clientCertPath);
-    _sslOptionsPtr->set_private_key(_sslSettings.clientKeyPath);
-    _sslOptionsPtr->set_private_key_password(_sslSettings.clientKeyPassword);
-    _sslOptionsPtr->set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
-    _connectOptionsPtr->set_clean_start(false);
-    _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
-    _connectOptionsPtr->set_automatic_reconnect(true);
-    _connectOptionsPtr->set_ssl(*_sslOptionsPtr);
-    _pahoMqttClientPtr->set_callback(*_callbacksPtr);
+    :MqttClient(hostAddress, 8883, clientId, MQTTVERSION_3_1_1, sslParams){
 }
 
 MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVersion, sslSettings sslParams)
-{
-    _createOptionsPtr = std::make_unique<mqtt::create_options>(mqttVersion);
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress, clientId, *_createOptionsPtr, nullptr),
-    _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
-    _hostPort = 8883;
-    _hostAddress = hostAddress;
-    _clientId = clientId;
-    _sslSettings = sslParams;
-    _sslOptionsPtr->set_trust_store(_sslSettings.caCertPath);
-    _sslOptionsPtr->set_key_store(_sslSettings.clientCertPath);
-    _sslOptionsPtr->set_private_key(_sslSettings.clientKeyPath);
-    _sslOptionsPtr->set_private_key_password(_sslSettings.clientKeyPassword);
-    _sslOptionsPtr->set_ssl_version(MQTT_SSL_VERSION_TLS_1_2);
-    _connectOptionsPtr->set_mqtt_version(mqttVersion);
-    _connectOptionsPtr->set_clean_start(false);
-    _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
-    _connectOptionsPtr->set_automatic_reconnect(true);
-    _connectOptionsPtr->set_ssl(*_sslOptionsPtr);
-    _pahoMqttClientPtr->set_callback(*_callbacksPtr);
+    :MqttClient(hostAddress, 8883, clientId, mqttVersion, sslParams){
 }
 
 void MqttClient::start(){
