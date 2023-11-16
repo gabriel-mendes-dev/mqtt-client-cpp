@@ -1,9 +1,15 @@
 #include "MqttClient.hpp"
 
-MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion)
+MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, std::string persistDir)
 {
     _createOptionsPtr = std::make_unique<mqtt::create_options>(mqttVersion);
-    _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, *_createOptionsPtr, nullptr),
+    _createOptionsPtr->set_max_buffered_messages(16384);
+    _createOptionsPtr->set_send_while_disconnected(true, true);
+    if(persistDir != ""){
+        _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, *_createOptionsPtr, persistDir);
+    } else {
+        _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, *_createOptionsPtr, nullptr);
+    }
     _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
     _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
     _hostPort = port;
@@ -11,14 +17,15 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
     _clientId = clientId;
     _connectOptionsPtr->set_mqtt_version(mqttVersion);
     _connectOptionsPtr->set_clean_start(false);
+    _connectOptionsPtr->set_clean_session(false);
     _connectOptionsPtr->set_keep_alive_interval(std::chrono::seconds(10));
     _connectOptionsPtr->set_automatic_reconnect(true);
     _pahoMqttClientPtr->set_callback(*_callbacksPtr);
 }
 
 
-MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, sslSettings sslParams)
-    : MqttClient(hostAddress, port, clientId, mqttVersion)
+MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, std::string persistDir, sslSettings sslParams)
+    : MqttClient(hostAddress, port, clientId, mqttVersion, persistDir)
 {
     _sslOptionsPtr = std::make_unique<mqtt::ssl_options>();
     _sslSettings = sslParams;
@@ -35,27 +42,27 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
 }
 
 MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId) 
-    : MqttClient(hostAddress, port, clientId, MQTTVERSION_3_1_1){
+    : MqttClient(hostAddress, port, clientId, MQTTVERSION_3_1_1, ""){
 }
 
 MqttClient::MqttClient(std::string hostAddress, std::string clientId)
-    : MqttClient(hostAddress, 1883, clientId, MQTTVERSION_3_1_1){
+    : MqttClient(hostAddress, 1883, clientId, MQTTVERSION_3_1_1, ""){
 }
 
 MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVersion)
-    : MqttClient(hostAddress, 1883, clientId, mqttVersion){
+    : MqttClient(hostAddress, 1883, clientId, mqttVersion, ""){
 }
 
 MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, sslSettings sslParams)
-    :MqttClient(hostAddress, port, clientId, MQTTVERSION_3_1_1, sslParams){
+    : MqttClient(hostAddress, port, clientId, MQTTVERSION_3_1_1, "", sslParams){
 }
 
 MqttClient::MqttClient(std::string hostAddress, std::string clientId, sslSettings sslParams)
-    :MqttClient(hostAddress, 8883, clientId, MQTTVERSION_3_1_1, sslParams){
+    : MqttClient(hostAddress, 8883, clientId, MQTTVERSION_3_1_1, "", sslParams){
 }
 
 MqttClient::MqttClient(std::string hostAddress, std::string clientId, int mqttVersion, sslSettings sslParams)
-    :MqttClient(hostAddress, 8883, clientId, mqttVersion, sslParams){
+    : MqttClient(hostAddress, 8883, clientId, mqttVersion, "", sslParams){
 }
 
 void MqttClient::start(){

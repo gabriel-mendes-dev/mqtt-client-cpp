@@ -35,11 +35,11 @@ class MqttClient {
         MqttClient(std::string hostAddress, std::string clientId);
         MqttClient(std::string hostAddress, int port, std::string clientId);
         MqttClient(std::string hostAddress, std::string clientId, int mqttVersion);
-        MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion);
+        MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, std::string persistDir);
         MqttClient(std::string hostAddress, std::string clientId, sslSettings sslParams);
         MqttClient(std::string hostAddress, int port, std::string clientId, sslSettings sslParams);
         MqttClient(std::string hostAddress, std::string clientId, int mqttVersion, sslSettings sslParams);
-        MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, sslSettings sslParams);
+        MqttClient(std::string hostAddress, int port, std::string clientId, int mqttVersion, std::string persistDir, sslSettings sslParams);
         void start();
         void finish();
         int publish(std::string topic, std::string payload, int qos, bool retain);
