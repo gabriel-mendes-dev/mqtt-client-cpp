@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mqtt/async_client.h>
+#include <thread>
 
 class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction_listener
 {
@@ -20,7 +21,7 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
         std::function<void()> _onDisconnectCallback = nullptr;
         std::function<void(PublishResult result, int messageId, mqtt::const_message_ptr msg)> _onPublishResultCallback = nullptr;
         std::vector<std::tuple<std::string, std::function<std::string(std::string, std::string)>>> messageHandlers;
-
+        
         void reconnect();
 
         // (Re)connection success in callback class
@@ -47,8 +48,31 @@ class MqttCallbacks: public virtual mqtt::callback, public virtual mqtt::iaction
 
         bool isMqttTopicIncluded(const std::string& topic, const std::string& filter);
 
+        void messageArrivedHandler(mqtt::const_message_ptr msg);
+
+        // Vector to store worker threads 
+        std::vector<std::thread> rcvHandlersThreads; 
+    
+        // Queue of messages to be handled by workers
+        std::queue<mqtt::const_message_ptr> msgQueue; 
+    
+        // Mutex to synchronize access to shared data 
+        std::mutex queueMutex; 
+    
+        // Condition variable to signal changes in the state of 
+        // the messages queue 
+        std::condition_variable conditionVariable; 
+    
+        // Flag to indicate whether the thread pool should stop 
+        // or not 
+        bool stopExecution = false;
+
+        // Enqueue message for handling by the thread pool 
+        void enqueue(mqtt::const_message_ptr msg);
+
     public:
-        MqttCallbacks(mqtt::async_client& mqttClient, mqtt::connect_options& connOpts);
+        MqttCallbacks(mqtt::async_client& mqttClient, mqtt::connect_options& connOpts, int numRcvHandlerThreads = std::thread::hardware_concurrency());
+        ~MqttCallbacks();
 
         // for class user to add callback for when client is connected
         void onConnect(std::function<void()> onConnectCallback);

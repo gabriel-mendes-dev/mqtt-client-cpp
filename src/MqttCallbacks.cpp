@@ -107,10 +107,7 @@ void MqttCallbacks::connection_lost(const std::string& cause){
     }
 }
 
-void MqttCallbacks::message_arrived(mqtt::const_message_ptr msg){
-    //std::cout << "Message arrived from broker" << std::endl;
-    //std::cout << "topic: '" << msg->get_topic() << "'" << std::endl;
-    //std::cout << "payload: '" << msg->to_string() << std::endl;
+void MqttCallbacks::messageArrivedHandler(mqtt::const_message_ptr msg){
     for(auto messageHandler : messageHandlers){
         if(isMqttTopicIncluded(msg->get_topic(), std::get<0>(messageHandler))){
             std::string response = std::get<1>(messageHandler)(msg->get_topic(), msg->to_string());
@@ -124,8 +121,91 @@ void MqttCallbacks::message_arrived(mqtt::const_message_ptr msg){
     }
 }
 
-MqttCallbacks::MqttCallbacks(mqtt::async_client& mqttClient, mqtt::connect_options& connOpts)
-    : _mqttClient(mqttClient), _connOpts(connOpts) {}
+// Enqueue task for execution by the thread pool 
+void MqttCallbacks::enqueue(mqtt::const_message_ptr msg) {
+    {
+        std::unique_lock<std::mutex> lock(queueMutex); 
+        msgQueue.emplace(std::move(msg)); 
+    }
+    conditionVariable.notify_one(); 
+}
+
+void MqttCallbacks::message_arrived(mqtt::const_message_ptr msg){
+    //std::cout << "Message arrived from broker" << std::endl;
+    //std::cout << "topic: '" << msg->get_topic() << "'" << std::endl;
+    //std::cout << "payload: '" << msg->to_string() << std::endl;
+    enqueue(msg);
+}
+
+MqttCallbacks::MqttCallbacks(mqtt::async_client& mqttClient, mqtt::connect_options& connOpts, int numRcvHandlerTasks)
+    : _mqttClient(mqttClient), _connOpts(connOpts) {
+        for (size_t i = 0; i < numRcvHandlerTasks; ++i) { 
+            rcvHandlersThreads.emplace_back([this, i] { 
+                while (true) { 
+                    mqtt::const_message_ptr msg; 
+                    // The reason for putting the below code 
+                    // here is to unlock the queue before 
+                    // executing the task so that other 
+                    // threads can perform enqueue tasks 
+                    {
+                        // Locking the queue so that data 
+                        // can be shared safely 
+                        std::unique_lock<std::mutex> lock(queueMutex); 
+
+                        // Waiting until there is a task to 
+                        // execute or the pool is stopped 
+                        conditionVariable.wait(lock, [this] { 
+                            return !msgQueue.empty() || stopExecution; 
+                        }); 
+
+                        // exit the thread in case the pool 
+                        // is stopped and there are no tasks 
+                        if (stopExecution && msgQueue.empty()) { 
+                            return; 
+                        } 
+
+                        // Get the next msg from the queue 
+                        msg = move(msgQueue.front()); 
+                        msgQueue.pop(); 
+                    }
+
+                    std::cout << "Received msg on topic " << msg->get_topic() << "(worker thread " << i  << ")" <<std::endl;
+                    try{
+                        for(auto messageHandler : messageHandlers){
+                            if(isMqttTopicIncluded(msg->get_topic(), std::get<0>(messageHandler))){
+                                std::string response = std::get<1>(messageHandler)(msg->get_topic(), msg->to_string());
+                                mqtt::properties msgProps = msg->get_properties();
+                                if(msgProps.contains(mqtt::property::code::RESPONSE_TOPIC)){
+                                    const mqtt::property& responseTopicProp = msgProps.get(mqtt::property::code::RESPONSE_TOPIC);
+                                    const std::string& responseTopic = mqtt::get<std::string>(responseTopicProp);
+                                    _mqttClient.publish(responseTopic, response);
+                                }
+                            }
+                        }
+                    } catch( std::exception& exc){
+
+                    }
+                } 
+            }); 
+        }
+    }
+
+MqttCallbacks::~MqttCallbacks(){
+    {
+        // Lock the queue to update the stop flag safely 
+        std::unique_lock<std::mutex> lock(queueMutex); 
+        stopExecution = true; 
+    }
+
+    // Notify all threads 
+    conditionVariable.notify_all(); 
+
+    // Joining all worker threads to ensure they have 
+    // completed their tasks 
+    for (auto& thread : rcvHandlersThreads) { 
+        thread.join(); 
+    } 
+}
 
 void MqttCallbacks::onConnect(std::function<void()> onConnectCallback){
     _onConnectCallback = onConnectCallback;

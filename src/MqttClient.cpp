@@ -11,7 +11,7 @@ MqttClient::MqttClient(std::string hostAddress, int port, std::string clientId, 
         _pahoMqttClientPtr = std::make_unique<mqtt::async_client>(hostAddress + ":" + std::to_string(port), clientId, *_createOptionsPtr, nullptr);
     }
     _connectOptionsPtr = std::make_unique<mqtt::connect_options>();
-    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr);
+    _callbacksPtr = std::make_unique<MqttCallbacks>(*_pahoMqttClientPtr, *_connectOptionsPtr, 4);
     _hostPort = port;
     _hostAddress = hostAddress;
     _clientId = clientId;
