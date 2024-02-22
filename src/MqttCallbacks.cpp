@@ -169,7 +169,7 @@ MqttCallbacks::MqttCallbacks(mqtt::async_client& mqttClient, mqtt::connect_optio
                         msgQueue.pop(); 
                     }
 
-                    std::cout << "Received msg on topic " << msg->get_topic() << "(worker thread " << i  << ")" <<std::endl;
+                    // std::cout << "Received msg on topic " << msg->get_topic() << "(worker thread " << i  << ")" <<std::endl;
                     try{
                         for(auto messageHandler : messageHandlers){
                             if(isMqttTopicIncluded(msg->get_topic(), std::get<0>(messageHandler))){
