@@ -47,5 +47,6 @@ class MqttClient {
         void onConnect(std::function<void()> onConnectCallback);
         void onDisconnect(std::function<void()> onDisconnectCallback);
         void onPublishResult(std::function<void(MqttCallbacks::PublishResult result, int messageId, mqtt::const_message_ptr msg)> onPublishResultCallback);
+        void lastWill(std::string topic, std::string payload, int qos, bool retain);
         bool isConnected();
 };

@@ -82,6 +82,12 @@ int MqttClient::publish(std::string topic, std::string payload, int qos, bool re
     return tok->get_message_id();
 }
 
+void MqttClient::lastWill(std::string topic, std::string payload, int qos, bool retain){
+    mqtt::message_ptr msg = mqtt::make_message(topic, payload, qos, retain);
+    mqtt::will_options will_opts(*msg);
+    _connectOptionsPtr->set_will(will_opts);
+}
+
 void MqttClient::on(std::string topicFilter, std::function<std::string(std::string topic, std::string payload)> messageHandler){
     _callbacksPtr->on(topicFilter, messageHandler);
 }
