@@ -72,7 +72,9 @@ void MqttClient::start(){
 
 void MqttClient::finish(){
     //std::cout << "Disconnecting " << _clientId << " from MQTT broker " << _hostAddress << std::endl;
-    _pahoMqttClientPtr->disconnect();
+    if(_pahoMqttClientPtr->is_connected()){
+        _pahoMqttClientPtr->disconnect();
+    }
     //std::cout << _clientId << " finished disconnecting." << std::endl;
 }
 
